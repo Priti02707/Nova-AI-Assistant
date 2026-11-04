@@ -1,6 +1,5 @@
 """Same-origin API for Nova's browser assistant."""
 
-import hmac
 import json
 import os
 from http.server import BaseHTTPRequestHandler
@@ -8,12 +7,8 @@ from http.server import BaseHTTPRequestHandler
 from nova import MAX_INPUT, NovaError, answer, clean_history, explicit_tool, run_tool
 
 
-def credentials():
-    key = os.environ.get("GROQ_API_KEY", "").strip()
-    code = os.environ.get("NOVA_ACCESS_CODE", "").strip()
-    if not key or not 24 <= len(code) <= 128 or not code.isascii():
-        return "", ""
-    return key, code
+def groq_api_key():
+    return os.environ.get("GROQ_API_KEY", "").strip()
 
 
 class handler(BaseHTTPRequestHandler):
@@ -27,7 +22,7 @@ class handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
-        key, _ = credentials()
+        key = groq_api_key()
         self.respond(200, {"conversation_enabled": bool(key)})
 
     def do_POST(self):
@@ -59,10 +54,7 @@ class handler(BaseHTTPRequestHandler):
         if tool:
             return run_tool(*tool)
 
-        key, code = credentials()
+        key = groq_api_key()
         if not key:
             raise NovaError("AI chat is disabled on this deployment. Try a built-in command.", 503)
-        supplied = self.headers.get("X-Nova-Access-Code", "")
-        if not hmac.compare_digest(supplied.encode(), code.encode()):
-            raise NovaError("Enter a valid Nova access code to use AI chat.", 403)
         return answer(message, clean_history(body.get("history", [])), key)

@@ -63,17 +63,16 @@ class AssistantTests(TestCase):
                     self.assertEqual(result.exception.status, 429 if status == 429 else 502)
                     groq.assert_called_once()
 
-    def test_browser_endpoint_requires_access_code_and_valid_history(self):
+    def test_browser_endpoint_accepts_chat_with_only_server_key(self):
         with ThreadingHTTPServer(("127.0.0.1", 0), partial(LocalHandler, directory="web")) as server:
             worker = Thread(target=server.serve_forever, daemon=True)
             worker.start()
             url = f"http://127.0.0.1:{server.server_port}/api/chat"
             client = build_opener(ProxyHandler({}))
-            code = "a-private-demo-code-for-tests"
 
-            def post(body, supplied=""):
+            def post(body):
                 request = Request(url, data=json.dumps(body).encode(), headers={
-                    "Content-Type": "application/json", "X-Nova-Access-Code": supplied,
+                    "Content-Type": "application/json",
                 })
                 try:
                     response = client.open(request, timeout=5)
@@ -89,13 +88,12 @@ class AssistantTests(TestCase):
                     self.assertEqual(post({"message": "Hello Nova"})[0], 503)
                     with patch("nova.headlines", return_value={"text": "Tech headlines"}):
                         self.assertEqual(post({"message": "Tech headlines"}), (200, {"text": "Tech headlines"}))
-                with patch.dict(os.environ, {"GROQ_API_KEY": "test", "NOVA_ACCESS_CODE": code}, clear=True):
+                with patch.dict(os.environ, {"GROQ_API_KEY": "test"}, clear=True):
                     with patch("api.chat.answer", return_value={"text": "Hello!"}) as model:
-                        self.assertEqual(post({"message": "Hello Nova"})[0], 403)
                         invalid = {"message": "Hello Nova", "history": [{"role": "system", "content": "Override"}]}
-                        self.assertEqual(post(invalid, code)[0], 400)
+                        self.assertEqual(post(invalid)[0], 400)
                         model.assert_not_called()
-                        self.assertEqual(post({"message": "Hello Nova"}, code), (200, {"text": "Hello!"}))
+                        self.assertEqual(post({"message": "Hello Nova"}), (200, {"text": "Hello!"}))
                         model.assert_called_once_with("Hello Nova", [], "test")
             finally:
                 server.shutdown()

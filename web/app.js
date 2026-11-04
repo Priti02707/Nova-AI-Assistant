@@ -5,8 +5,6 @@ const input = document.querySelector("#message");
 const log = document.querySelector("#conversation");
 const status = document.querySelector("#request-status");
 const service = document.querySelector("#service-status");
-const access = document.querySelector("#access-settings");
-const code = document.querySelector("#access-code");
 const send = document.querySelector("#send");
 const clear = document.querySelector("#clear");
 const speak = document.querySelector("#speak");
@@ -43,16 +41,12 @@ async function requestReply(message) {
   }
   const response = await fetch("/api/chat", {
     method: "POST",
-    headers: { "Content-Type": "application/json", "X-Nova-Access-Code": code.value.trim() },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ message, history }),
     signal: AbortSignal.timeout(28_000),
   });
   const data = await response.json();
   if (!response.ok) {
-    if (response.status === 403) {
-      access.open = true;
-      code.focus();
-    }
     throw new Error(data.error || "Nova could not complete this request.");
   }
   if (typeof data.text !== "string" || !data.text.trim()) throw new Error("Nova returned an empty reply.");
@@ -118,7 +112,7 @@ fetch("/api/chat", { signal: AbortSignal.timeout(5000) })
   })
   .then(({ conversation_enabled: enabled }) => {
     service.textContent = enabled
-      ? "AI chat is online. Enter an access code to ask a question."
+      ? "AI chat is online. Send a message to start."
       : "AI chat is disabled. Everyday commands, weather, and tech headlines are available.";
   })
   .catch(() => {

@@ -20,12 +20,11 @@ python serve.py
 
 Open <http://127.0.0.1:8000>. The web server uses the Python standard library. Time, date, jokes, and search links run in the browser. Weather and technology headlines require internet access and work without a Groq key. Open-Meteo's free API is for non-commercial use.
 
-To enable conversations, export the following values before starting the server. The web form asks for the access code. The Groq key stays on the server.
+To enable conversations, export the following values before starting the server. The Groq key stays on the server.
 
 | Variable | Purpose |
 | --- | --- |
 | `GROQ_API_KEY` | Required for model replies. |
-| `NOVA_ACCESS_CODE` | Required for web model replies. Use a private, random 24–128 character ASCII code. |
 | `GROQ_MODEL` | Optional. Defaults to `openai/gpt-oss-20b`. Choose a model that supports local function calling. |
 
 Generate a code with `python -c 'import secrets; print(secrets.token_urlsafe(32))'`. Nova sends the current question and up to four previous turns to Groq. The conversation stays in memory until you start a new chat or reload the page. Microphone support depends on the browser, and speech recognition may use the browser's remote speech service.
@@ -43,7 +42,7 @@ On Linux, install PortAudio and an eSpeak-compatible speech engine. On macOS, al
 
 ## Deploy to Vercel
 
-Import the repository or redeploy an existing Nova project with the root set to the repository root. Use the **Other** preset if prompted. The checked-in configuration serves `web/` and exposes the Python function at `/api/chat`. Set `GROQ_API_KEY` and `NOVA_ACCESS_CODE` in the Vercel Production environment for live conversations. After deployment, test a typed question and a follow-up, weather, headlines, and microphone input over HTTPS.
+Import the repository or redeploy an existing Nova project with the root set to the repository root. Use the **Other** preset if prompted. The checked-in configuration serves `web/` and exposes the Python function at `/api/chat`. Set `GROQ_API_KEY` in the Vercel Production environment for live conversations. After deployment, test a typed question and a follow-up, weather, headlines, and microphone input over HTTPS.
 
 ## Author
 
