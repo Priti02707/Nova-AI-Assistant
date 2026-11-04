@@ -91,6 +91,33 @@ def run_tool(name, arguments):
     raise NovaError("Nova could not complete that tool request.")
 
 
+def groq_message(payload, api_key):
+    request = Request(GROQ_URL, data=json.dumps(payload).encode(), headers={"Content-Type": "application/json"})
+    request.add_unredirected_header("Authorization", f"Bearer {api_key}")
+    return read_json(request, timeout=12)["choices"][0]["message"]
+
+
+def groq_error_code(error):
+    try:
+        with error:
+            details = json.loads(error.read(16_384))["error"]
+        return details.get("code")
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        return None
+
+
+def groq_error(status, code):
+    if status == 401:
+        return NovaError("Groq rejected GROQ_API_KEY (HTTP 401). Check the key in Nova's deployment settings and redeploy.")
+    if status == 403:
+        return NovaError("Groq denied this request (HTTP 403). Check the key's project permissions and model access.")
+    if status == 404 or code in ("model_not_found", "model_decommissioned"):
+        return NovaError("Groq could not use the selected model. Check GROQ_MODEL or remove the override to use Nova's default.")
+    if status == 429:
+        return NovaError("Groq is rate limiting requests. Try again later.", 429)
+    return NovaError(f"Groq rejected this request (HTTP {status}). Try a new chat or check the model settings.")
+
+
 def answer(message, history, api_key):
     model = os.environ.get("GROQ_MODEL", "").strip() or DEFAULT_MODEL
     payload = {
@@ -101,25 +128,30 @@ def answer(message, history, api_key):
     }
     if model == DEFAULT_MODEL:
         payload["reasoning_effort"] = "low"
-    request = Request(GROQ_URL, data=json.dumps(payload).encode(), headers={"Content-Type": "application/json"})
-    request.add_unredirected_header("Authorization", f"Bearer {api_key}")
-    try:
-        result = read_json(request, timeout=12)["choices"][0]["message"]
-        calls = result.get("tool_calls") or []
-        if calls:
-            if len(calls) != 1:
-                raise ValueError("Expected one tool")
-            function = calls[0]["function"]
-            return run_tool(function["name"], json.loads(function["arguments"]))
-        content = result.get("content")
-        if isinstance(content, str) and content.strip():
-            return {"text": content.strip()[:MAX_REPLY]}
-    except HTTPError as error:
-        status = error.code
-        error.close()
-        if status == 429:
-            raise NovaError("Groq is rate limiting requests. Try again later.", 429) from None
-        raise NovaError("Groq could not answer. Check the server key and model configuration.") from None
-    except (OSError, ValueError, TypeError, KeyError, IndexError, AttributeError):
-        pass
+    for attempt in range(2):
+        try:
+            result = groq_message(payload, api_key)
+            calls = result.get("tool_calls") or []
+            if calls:
+                if "tools" not in payload or len(calls) != 1:
+                    raise ValueError("Unexpected tool response")
+                function = calls[0]["function"]
+                return run_tool(function["name"], json.loads(function["arguments"]))
+            content = result.get("content")
+            if isinstance(content, str) and content.strip():
+                return {"text": content.strip()[:MAX_REPLY]}
+        except HTTPError as error:
+            status, code = error.code, groq_error_code(error)
+            if attempt == 0 and status == 400 and code == "tool_use_failed":
+                # Ordinary chat can continue if the model generated an invalid tool call.
+                payload.pop("tools")
+                payload["messages"][0]["content"] += (
+                    " Live tools are unavailable for this answer. "
+                    "For weather or tech headlines, suggest a built-in command without inventing results."
+                )
+                continue
+            raise groq_error(status, code) from None
+        except (OSError, ValueError, TypeError, KeyError, IndexError, AttributeError):
+            pass
+        break
     raise NovaError("Nova did not receive a usable response from Groq. Try again.")
