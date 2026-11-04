@@ -8,7 +8,7 @@ def speak(text):
     print("Speaking:", text)
 
     try:
-        engine = pyttsx3.init("sapi5")
+        engine = pyttsx3.init()
 
         engine.setProperty("rate", 150)
         engine.setProperty("volume", 1.0)
@@ -16,7 +16,8 @@ def speak(text):
         voices = engine.getProperty("voices")
 
         # Default voice set
-        engine.setProperty("voice", voices[0].id)
+        if voices:
+            engine.setProperty("voice", voices[0].id)
 
         engine.say(str(text))
 

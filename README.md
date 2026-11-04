@@ -1,55 +1,20 @@
-# Nova AI Assistant 🤖
+# Nova AI Assistant
 
-Nova AI Assistant is a Python-based voice assistant that can listen to user commands and perform useful tasks such as providing weather updates, news, and system-related operations.
+Nova is a Python desktop voice assistant. It can tell the time or date, open Google or YouTube, play a YouTube search result, read a Wikipedia summary, and tell a joke.
 
-## Features
+## Run locally
 
-- 🎤 Voice Command Recognition
-- 🗣️ Text-to-Speech Responses
-- 🌦️ Weather Updates
-- 📰 Latest News
-- 💻 System Commands
-- 🚀 Modular Python Structure
+Use a desktop session with a working microphone, speakers, and internet access. On Linux, install PortAudio and an eSpeak-compatible speech engine through your package manager. On macOS, grant microphone access to the terminal or editor that starts Python. On Windows, speech uses the system voice.
 
-## Project Structure
-
-```
-Nova-AI-Assistant/
-│
-├── assistant.py
-├── command.py
-├── speech.py
-├── main.py
-│
-├── features/
-│   ├── weather.py
-│   ├── news.py
-│   └── system.py
-│
-└── README.md
+```bash
+python -m pip install -r requirements.txt
+python main.py
 ```
 
-## Technologies Used
+Speak after the “Listening…” prompt. Try “what time is it”, “open YouTube”, or “tell me a joke”. Say “goodbye” to exit, or press Ctrl+C. Voice recognition sends recorded audio to Google for transcription.
 
-- Python
-- pyttsx3
-- Speech Recognition
-- Requests API
-- VS Code
-- Git & GitHub
-
-## Future Improvements
-
-- GUI Interface
-- AI Chat Integration
-- Smart Task Automation
-- Reminder System
-- Email & WhatsApp Support
+Weather, news, and operating-system commands are planned. The `features/` files are placeholders.
 
 ## Author
 
-**Priti Kumari**
-
-BCA (AI & ML) | Sharda University
-
-Aspiring Machine Learning Engineer
+Priti Kumari

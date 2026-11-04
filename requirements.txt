@@ -1,0 +1,6 @@
+pyjokes
+pyttsx3
+pywhatkit
+sounddevice
+SpeechRecognition
+wikipedia

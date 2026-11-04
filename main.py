@@ -1,4 +1,5 @@
 from assistant import start_assistant
 
 
-start_assistant()
+if __name__ == "__main__":
+    start_assistant()
