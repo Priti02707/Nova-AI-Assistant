@@ -18,3 +18,9 @@ Weather, news, and operating-system commands are planned. The `features/` files 
 ## Author
 
 Priti Kumari
+
+## Browser demo and deployment
+
+From the repository root, run `python -m http.server 8000 --bind 127.0.0.1 --directory web` and open <http://127.0.0.1:8000>.
+
+Import this GitHub repository into Vercel with the root directory set to the repository root. The checked-in configuration serves `web/` as a static site. It needs no API key or Python dependencies. After deployment, check the command examples and test the microphone over HTTPS in a browser that supports speech recognition. Typed commands work when the browser lacks voice support or the visitor declines microphone permission. Nova gives the visitor links for Wikipedia and YouTube searches.
