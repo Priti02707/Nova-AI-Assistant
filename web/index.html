@@ -3,41 +3,49 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Try Nova's everyday commands using text or your browser microphone.">
+  <meta name="description" content="Talk to Nova for explanations, plans, weather, technology headlines, and everyday commands.">
   <title>Nova AI Assistant</title>
   <link rel="stylesheet" href="./styles.css">
   <script type="module" src="./app.js"></script>
 </head>
 <body>
   <main>
-    <p class="eyebrow">Browser demo</p>
-    <h1>Nova AI Assistant</h1>
-    <p class="intro">Ask for the time, search Wikipedia, find a video, or hear a joke.</p>
-    <section class="panel" aria-label="Command">
-      <form id="command-form">
-        <label for="command">Your command</label>
-        <input id="command" placeholder="What time is it?" maxlength="240" required autocomplete="off">
+    <header>
+      <p class="eyebrow">Personal assistant</p>
+      <h1>Nova AI Assistant</h1>
+      <p class="intro">Ask a question, make a plan, or get the current weather. You can type or speak.</p>
+    </header>
+    <section class="panel" aria-label="Nova assistant">
+      <p id="service-status" class="note" role="status">Checking AI chat availability…</p>
+      <details id="access-settings">
+        <summary>AI chat access</summary>
+        <label for="access-code">Nova access code</label>
+        <input id="access-code" type="password" maxlength="128" autocomplete="off">
+        <p class="note">Enter the access code from the site owner. AI questions and recent replies are sent to Groq.</p>
+      </details>
+      <div class="actions" aria-label="Example requests">
+        <button type="button" class="secondary" data-message="Explain binary search in simple terms.">Ask Nova</button>
+        <button type="button" class="secondary" data-message="Weather in New Delhi">Weather</button>
+        <button type="button" class="secondary" data-message="Tech headlines">Tech headlines</button>
+        <button type="button" class="secondary" data-message="What time is it?">Time</button>
+      </div>
+      <div id="conversation" role="log" aria-label="Conversation" tabindex="0">
+        <p class="note">Your conversation will appear here.</p>
+      </div>
+      <p id="request-status" role="status" class="note"></p>
+      <form id="message-form">
+        <label for="message">Message Nova</label>
+        <textarea id="message" rows="2" maxlength="2000" required placeholder="What would you like help with?"></textarea>
         <div class="actions">
-          <button>Run command</button>
+          <button id="send">Send</button>
           <button type="button" id="microphone" class="secondary" hidden>Use microphone</button>
+          <button type="button" id="speak" class="secondary" hidden>Read latest reply</button>
+          <button type="button" id="clear" class="secondary">New chat</button>
         </div>
       </form>
       <p class="note" id="voice-status" role="status"></p>
-      <div class="actions" aria-label="Example commands">
-        <button type="button" class="secondary" data-command="What time is it?">Time</button>
-        <button type="button" class="secondary" data-command="Search Wikipedia for machine learning">Wikipedia</button>
-        <button type="button" class="secondary" data-command="Tell me a joke">Joke</button>
-      </div>
+      <p class="note">The browser keeps this conversation until you refresh or start a new chat. Voice recognition depends on your browser and may send audio to its speech service.</p>
     </section>
-    <section class="panel" aria-labelledby="reply-title">
-      <h2 id="reply-title">Nova’s reply</h2>
-      <p id="reply" role="status">Your reply will appear here.</p>
-      <div class="actions">
-        <a id="result-link" target="_blank" rel="noopener noreferrer" hidden></a>
-        <button type="button" id="speak" class="secondary" hidden>Read aloud</button>
-      </div>
-    </section>
-    <p class="note">Typing works without a microphone. Voice recognition depends on your browser and may send audio to its speech service.</p>
   </main>
 </body>
 </html>

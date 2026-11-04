@@ -40,14 +40,16 @@ def listen():
     sample_rate = 16000
 
 
-    recording = sd.rec(
-        int(duration * sample_rate),
-        samplerate=sample_rate,
-        channels=1,
-        dtype="int16"
-    )
-
-    sd.wait()
+    try:
+        recording = sd.rec(
+            int(duration * sample_rate),
+            samplerate=sample_rate,
+            channels=1,
+            dtype="int16",
+        )
+        sd.wait()
+    except sd.PortAudioError as error:
+        raise OSError("Microphone recording failed") from error
 
 
     audio_data = sr.AudioData(
@@ -63,7 +65,7 @@ def listen():
 
         print("You said:", command)
 
-        return command.lower()
+        return command
 
 
     except Exception:

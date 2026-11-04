@@ -1,105 +1,53 @@
-import datetime
-import webbrowser
-import wikipedia
-import pyjokes
-import pywhatkit
+"""Recognize explicit desktop commands and produce a reply."""
 
-wikipedia.set_lang("en")
+from datetime import datetime
+import re
+from urllib.parse import urlencode
 
-from speech import speak
+from features.system import desktop_info
 
 
-def execute_command(command):
+def local_command(message):
+    command = message.strip().rstrip("?!")
+    now = datetime.now()
+    if re.fullmatch(r"(?:(?:what(?: is|'s) (?:the )?)?(?:current )?time|what time is it)", command, re.I):
+        return {"text": "The time is " + now.strftime("%I:%M %p") + "."}
+    if re.fullmatch(r"(?:what(?: is|'s) (?:the )?)?(?:today's |current )?date(?: today)?", command, re.I):
+        return {"text": "Today is " + now.strftime("%d %B %Y") + "."}
+    if re.fullmatch(r"(?:show (?:my )?)?system info", command, re.I):
+        return {"text": desktop_info()}
+    if re.fullmatch(r"(?:tell me )?(?:a )?joke", command, re.I):
+        return {"text": "Why did the developer go broke? Because they used up all their cache."}
+    if command.lower() in {"open google", "open youtube"}:
+        site = command.split()[-1].lower()
+        return {"text": f"Opening {site.title()}.", "open_url": f"https://www.{site}.com/"}
 
-    print("Command received:", command)
+    video = re.fullmatch(r"(?:play|search youtube for)\s+(.+)", command, re.I)
+    if video:
+        url = "https://www.youtube.com/results?" + urlencode({"search_query": video[1]})
+        if command.lower().startswith("play "):
+            try:
+                import pywhatkit
 
-    command = command.lower()
+                pywhatkit.playonyt(video[1])
+                return {"text": f"Opening a YouTube video for {video[1]}."}
+            except Exception:
+                pass
+        return {"text": f"Opening YouTube search results for {video[1]}.", "open_url": url}
 
-
-    if "time" in command:
-
-        current_time = datetime.datetime.now().strftime("%I:%M %p")
-
-        speak("The current time is " + current_time)
-
-
-    elif "date" in command:
-
-        today = datetime.datetime.now().strftime("%d %B %Y")
-
-        speak("Today's date is " + today)
-
-
-    elif "open google" in command:
-
-        webbrowser.open("https://www.google.com")
-
-        speak("Opening Google")
-
-
-    elif "open youtube" in command:
-
-        webbrowser.open("https://www.youtube.com")
-
-        speak("Opening YouTube")
-
-
-    elif "play" in command:
-
-        song = command.replace("play", "")
-
-        speak("Playing " + song)
-
-        pywhatkit.playonyt(song)
-
-    
-    elif "wikipedia" in command or "search" in command or "who is" in command or "what is" in command:
-
+    topic = re.fullmatch(r"(?:search wikipedia for|wikipedia)\s+(.+)", command, re.I)
+    if topic:
         try:
+            import wikipedia
 
-            topic = command.replace("wikipedia", "")
-            topic = topic.replace("search", "")
-            topic = topic.replace("who is", "")
-            topic = topic.replace("what is", "")
-            topic = topic.strip()
+            wikipedia.set_lang("en")
+            return {"text": wikipedia.summary(topic[1], sentences=1)}
+        except Exception:
+            url = "https://en.wikipedia.org/w/index.php?" + urlencode({"search": topic[1]})
+            return {"text": "The summary is unavailable. Opening Wikipedia search results.", "open_url": url}
 
-            print("Searching Wikipedia:", topic)
-
-            speak("Searching Wikipedia")
-
-            result = wikipedia.summary(topic, sentences=1)
-
-            print("Result:", result)
-
-            speak("I found the information")
-
-            speak(result)
-
-
-        except Exception as e:
-
-           print("Wikipedia Error:", e)
-
-           speak("Sorry, I could not find information")
-    
-        
-
-    elif "joke" in command:
-
-        joke = pyjokes.get_joke()
-
-        print(joke)
-
-        speak(joke)
-
-
-    elif "exit" in command or "goodbye" in command or "stop" in command:
-
-        speak("Goodbye")
-
-        exit()
-
-
-    else:
-
-        speak("Sorry, I don't understand this command")
+    search = re.fullmatch(r"search(?: the web)? for\s+(.+)", command, re.I)
+    if search:
+        url = "https://www.google.com/search?" + urlencode({"q": search[1]})
+        return {"text": f"Opening Google search results for {search[1]}.", "open_url": url}
+    return None

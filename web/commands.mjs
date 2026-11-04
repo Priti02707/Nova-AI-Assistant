@@ -1,5 +1,3 @@
-const help = "Try asking for the time, today's date, a joke, a Wikipedia search, or a YouTube video.";
-
 export function interpret(input, now = new Date()) {
   const command = input.trim().replace(/[?!]+$/, "");
   if (/^(?:(?:what(?: is|'s) (?:the )?)?(?:current )?time|what time is it)$/i.test(command)) {
@@ -25,11 +23,20 @@ export function interpret(input, now = new Date()) {
     return { text: `YouTube search for “${video}”`, url: url.href, label: "View YouTube results" };
   }
 
-  const topic = command.match(/^(?:search wikipedia for|wikipedia|search|who is|what is)\s+(.+)$/i)?.[1];
+  const topic = command.match(/^(?:search wikipedia for|wikipedia)\s+(.+)$/i)?.[1];
   if (topic) {
     const url = new URL("https://en.wikipedia.org/w/index.php");
     url.searchParams.set("search", topic);
     return { text: `Wikipedia search for “${topic}”`, url: url.href, label: "View Wikipedia results" };
   }
-  return { text: help };
+  const search = command.match(/^search(?: the web)? for\s+(.+)$/i)?.[1];
+  if (search) {
+    const url = new URL("https://www.google.com/search");
+    url.searchParams.set("q", search);
+    return { text: `Web search for “${search}”`, url: url.href, label: "View Google results" };
+  }
+  if (/^(?:show (?:my )?)?system info$/i.test(command)) {
+    return { text: `Browser language: ${navigator.language} · Time zone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}` };
+  }
+  return null;
 }

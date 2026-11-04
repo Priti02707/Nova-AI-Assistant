@@ -4,6 +4,7 @@
   "buildCommand": "",
   "installCommand": "",
   "outputDirectory": "web",
+  "functions": {"api/chat.py": {"maxDuration": 30}},
   "headers": [
     {
       "source": "/(.*)",
